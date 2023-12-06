@@ -16,6 +16,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".NecessaryConditions"
+            android:exported="false" />
+        <activity
             android:name=".MainAdminPanel"
             android:exported="false" />
         <activity
@@ -29,6 +32,16 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="www.corpwatch.com"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
     </application>

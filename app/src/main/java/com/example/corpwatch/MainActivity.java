@@ -83,6 +83,46 @@ public class MainActivity extends AppCompatActivity {
     public void OnClickAdmin (View v){
         EditText login = (EditText) findViewById(R.id.editTextText);
         EditText password = (EditText) findViewById(R.id.editTextText2);
+        final String usernameText = login.getText().toString().trim();
+        final String passwordText = password.getText().toString().trim();
+        Intent intent = new Intent(this, MainAdminPanel.class);
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://213.226.126.69/login_admin.php",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        System.out.println(response);
+                        if (response.equals("200")) {
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Неправильный логин или пароль", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if (error.getMessage() == null) {
+                    System.out.println(1212);
+                } else {
+                    System.out.println(error.getMessage());
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
+                }
 
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new Hashtable<String, String>();
+                System.out.println(usernameText + " " + passwordText);
+                params.put("login", usernameText);
+                params.put("password", passwordText);
+                return params;
+            }
+        };
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        stringRequest.setShouldCache(false);
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        requestQueue.add(stringRequest);
+        login.setText("");
+        password.setText("");
     }
 }
