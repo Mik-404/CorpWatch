@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.AppCompat" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="colorPrimaryDark">@color/bluedark</item>
+        <item name="android:navigationBarColor">@color/bluedark</item>
+
+    </style>
+
+</resources>
