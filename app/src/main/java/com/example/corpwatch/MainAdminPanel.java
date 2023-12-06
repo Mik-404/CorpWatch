@@ -27,12 +27,10 @@ public class MainAdminPanel extends AppCompatActivity {
     }
 
     public void NewMailing (View v) {
-        System.out.println("here1");
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, "http://213.226.126.69/adminMailing.php",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        System.out.println("here2 " + response);
                         Toast.makeText(getApplicationContext(), "Рассылка успешно создана", Toast.LENGTH_LONG).show();
                     }
                 }, new Response.ErrorListener() {

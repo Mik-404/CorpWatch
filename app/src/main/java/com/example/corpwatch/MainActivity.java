@@ -3,6 +3,7 @@ package com.example.corpwatch;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -39,16 +40,23 @@ public class MainActivity extends AppCompatActivity {
         EditText password = (EditText) findViewById(R.id.editTextText2);
         final String usernameText = login.getText().toString().trim();
         final String passwordText = password.getText().toString().trim();
-        Intent intent = new Intent(this, MainScreen.class);
-        final StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://213.226.126.69/login_user.php",
+        Intent intent1 = new Intent(this, NecessaryConditions.class);
+        Intent intent2 = new Intent(this, MainScreen.class);
+        final StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://213.226.126.69/info.php",
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        System.out.println(response);
-                        if (response.equals("200")) {
-                            startActivity(intent);
-                        } else {
+                        if (response.equals("400")) {
                             Toast.makeText(getApplicationContext(), "Неправильный логин или пароль", Toast.LENGTH_LONG).show();
+                        } else {
+                            User[] resultObjects = new Gson().fromJson(response.toString(), User[].class);
+                            setValue(resultObjects[0].id);
+                            System.out.println(resultObjects[0].image);
+                            if (resultObjects[0].bot.equals("1") && resultObjects[0].image != null) {
+                                startActivity(intent2);
+                            } else {
+                                startActivity(intent1);
+                            }
                         }
                     }
                 }, new Response.ErrorListener() {
@@ -68,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, String> params = new Hashtable<String, String>();
                 params.put("login", usernameText);
                 params.put("password", passwordText);
+                params.put("type", "login");
                 return params;
             }
         };
@@ -78,6 +87,13 @@ public class MainActivity extends AppCompatActivity {
         login.setText("");
         password.setText("");
 
+    }
+
+    public void setValue(String value){
+        SharedPreferences preferences = this.getSharedPreferences("settings", this.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("id", value);
+        editor.apply();
     }
 
     public void OnClickAdmin (View v){
