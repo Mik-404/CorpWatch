@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation ("net.gotev:uploadservice:2.1")
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("androidx.appcompat:appcompat:1.6.1")

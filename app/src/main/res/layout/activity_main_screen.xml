@@ -7,6 +7,50 @@
     android:background="@color/bluelight"
     tools:context=".MainScreen">
 
+    <Button
+        android:id="@+id/button11"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/button_log"
+        android:fontFamily="monospace"
+        android:onClick="OnClickReqButton"
+        android:paddingTop="30dp"
+        android:paddingBottom="30dp"
+        android:text="Отправить анкету"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.682" />
+
+    <Button
+        android:id="@+id/button10"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/button_log"
+        android:fontFamily="monospace"
+        android:onClick="onClickTestButton"
+        android:paddingTop="30dp"
+        android:paddingBottom="30dp"
+        android:text="Отправить отчёт"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.682" />
+
     <ImageButton
         android:id="@+id/button3"
         android:layout_width="45dp"
@@ -115,6 +159,61 @@
 
 
     </RelativeLayout>
+
+    <ScrollView
+        android:id="@+id/scv1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rel">
+
+        <LinearLayout
+            android:id="@+id/scvcd1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/example1_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="right|center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="0px"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="45"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+                <ImageButton
+                    android:id="@+id/imageButton"
+                    android:layout_width="0px"
+                    android:layout_height="40dip"
+
+                    android:layout_gravity="right"
+                    android:layout_weight="1"
+                    android:background="#00FFFFFF"
+                    android:paddingStart="20dp"
+                    android:scaleType="fitStart"
+                    tools:src="@drawable/skrpk" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

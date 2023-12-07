@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
+//        Intent intent2 = new Intent(this, MainScreen.class);
+//        startActivity(intent2);
     }
 
     public void OnClickUser (View v) {
