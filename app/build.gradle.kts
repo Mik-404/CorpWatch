@@ -35,6 +35,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.squareup.okhttp3:okhttp:3.10.0")
     implementation ("net.gotev:uploadservice:2.1")
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.code.gson:gson:2.8.9")

@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             User[] resultObjects = new Gson().fromJson(response.toString(), User[].class);
                             setValue(resultObjects[0].id);
-                            System.out.println(resultObjects[0].image);
                             if (resultObjects[0].bot.equals("1") && resultObjects[0].image != null) {
                                 startActivity(intent2);
                             } else {

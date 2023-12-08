@@ -31,15 +31,12 @@ import android.widget.Toast;
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-
 
 import org.json.JSONObject;
 
@@ -50,9 +47,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -64,6 +63,14 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 
+import okhttp3.Call;
+import okhttp3.Request;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class MainScreen extends AppCompatActivity {
     int height_f = 3;
     View f = null;
@@ -72,10 +79,12 @@ public class MainScreen extends AppCompatActivity {
     float ActiveTxt = 18f;
     float BaseTxt = 17;
     byte[] inputData;
+    Files active;
     TextView ex1tsc;
     ImageButton ex1bsc;
     LinearLayout ex1lsc;
     String CurrentReq;
+    Files [] resultObjects;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,8 +100,8 @@ public class MainScreen extends AppCompatActivity {
         getHistory();
     }
     public void getHistory () {
-        final StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://213.226.126.69/hist.php",
-                new Response.Listener<String>() {
+        final StringRequest stringRequest = new StringRequest(com.android.volley.Request.Method.POST, "http://213.226.126.69/hist.php",
+                new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
 
@@ -120,7 +129,8 @@ public class MainScreen extends AppCompatActivity {
                             scv.addView(elem);
                             return;
                         }
-                        Files [] resultObjects = new Gson().fromJson(response.toString(), Files[].class);
+                        resultObjects = new Gson().fromJson(response.toString(), Files[].class);
+                        int i = 0;
                         for (Files f : resultObjects) {
                             System.out.println(f.name_file);
                             TextView elem = new TextView(getApplicationContext());
@@ -142,7 +152,26 @@ public class MainScreen extends AppCompatActivity {
                             elem2.setBackgroundColor(Color.parseColor("#00FFFFFF"));
                             elem2.setScaleType(ImageView.ScaleType.FIT_START);
                             elem2.setImageResource (R.drawable.skrpk);
+                            elem2.setTag(Integer.toString(i));
+                            elem2.setOnClickListener(new View.OnClickListener(){
+                                @Override
+                                public void onClick(View view) {
+                                    System.out.println(view.getTag());
+                                    active = resultObjects[Integer.parseInt(view.getTag().toString())];
+                                    for (int i = 0; i < 5; i++) {
+                                        try {
+                                            System.out.println(active.path);
+                                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                            intent.setType("application/pdf");
+                                            startActivityForResult(intent, 2);
+                                            break;
+                                        } catch (Exception e) {
 
+                                        }
+                                    }
+                                }
+                            });
+                            i++;
 
 
                             elem3.setVerticalGravity(Gravity.CENTER_VERTICAL);
@@ -154,7 +183,7 @@ public class MainScreen extends AppCompatActivity {
                             scv.addView(elem3);
                         }
                     }
-                }, new Response.ErrorListener() {
+                }, new com.android.volley.Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(getApplicationContext(), "No internet connection", Toast.LENGTH_LONG).show();
@@ -193,10 +222,10 @@ public class MainScreen extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        for (int i = 0; i < 5; i++) {
-            try {
-                if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
-                    if (resultCode == RESULT_OK) {
+
+            if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
+                for (int i = 0; i < 5; i++) {
+                    try {
                         // Get the Uri of the selected file
                         Uri uri = data.getData();
                         String uriString = uri.toString();
@@ -209,31 +238,62 @@ public class MainScreen extends AppCompatActivity {
                             try {
                                 cursor = this.getContentResolver().query(uri, null, null, null, null);
                                 if (cursor != null && cursor.moveToFirst()) {
-                                    displayName = cursor.getString(Math.max(0,cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+                                    displayName = cursor.getString(Math.max(0, cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
 
-                                    uploadPDF(displayName,uri);
+                                    uploadPDF(displayName, uri);
                                 }
                             } finally {
                                 cursor.close();
                             }
                         } else if (uriString.startsWith("file://")) {
                             displayName = myFile.getName();
-                            uploadPDF(displayName,uri);
+                            uploadPDF(displayName, uri);
                         }
+
+                        break;
+                    } catch (Exception e) {
+
                     }
                 }
-                break;
-            } catch (Exception e) {
+            } else if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        // Get the Uri of the selected file
+                        Uri uri = data.getData();
+                        String uriString = uri.toString();
+                        File myFile = new File(uriString);
+                        String path = myFile.getAbsolutePath();
+                        String displayName = null;
 
+                        if (uriString.startsWith("content://")) {
+                            Cursor cursor = null;
+                            try {
+                                cursor = this.getContentResolver().query(uri, null, null, null, null);
+                                if (cursor != null && cursor.moveToFirst()) {
+                                    displayName = cursor.getString(Math.max(0, cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+
+                                    uploadPDF2(displayName, uri);
+                                }
+                            } finally {
+                                cursor.close();
+                            }
+                        } else if (uriString.startsWith("file://")) {
+                            displayName = myFile.getName();
+                            uploadPDF2(displayName, uri);
+                        }
+
+                        break;
+                    } catch (Exception e) {
+
+                    }
+                }
             }
-        }
     }
 
     private void uploadPDF(final String pdfname, Uri pdffile){
         InputStream iStream = null;
         try {
             iStream = getContentResolver().openInputStream(pdffile);
-            System.out.println(pdffile.toString());
             inputData = getBytes(iStream);
             AsyncUploader uploadFileToServer = new AsyncUploader();
             uploadFileToServer.execute();
@@ -244,7 +304,21 @@ public class MainScreen extends AppCompatActivity {
         }
         Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
     }
-
+    public void uploadPDF2 (final String pdfname, Uri pdffile) {
+        InputStream iStream = null;
+        try {
+            CurrentReq = "change";
+            iStream = getContentResolver().openInputStream(pdffile);
+            inputData = getBytes(iStream);
+            AsyncUploader2 uploadFileToServer = new AsyncUploader2();
+            uploadFileToServer.execute();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
+    }
     public byte[] getBytes(InputStream inputStream) throws IOException {
         ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
         int bufferSize = 1024;
@@ -348,57 +422,70 @@ public class MainScreen extends AppCompatActivity {
 
         private String uploadFile() {
             try {
-                JSONObject params = new JSONObject();
-                params.put("id", getValue());
-                HttpURLConnection httpUrlConnection = null;
-                URL url = new URL("http://213.226.126.69:5000/" + CurrentReq);
-                httpUrlConnection = (HttpURLConnection) url.openConnection();
-                httpUrlConnection.setUseCaches(false);
-                httpUrlConnection.setDoOutput(true);
+                OkHttpClient client = new OkHttpClient();
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("id", getValue())
+                        .addFormDataPart("file", "file.pdf",
+                                RequestBody.create(MediaType.parse("text/plain"),
+                                        inputData))
+                        .build();
 
-                httpUrlConnection.setRequestMethod("POST");
-                httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
-                httpUrlConnection.setRequestProperty("Cache-Control", "no-cache");
-                httpUrlConnection.setRequestProperty(
-                        "Content-Type", "multipart/form-data;boundary=" + this.boundary);
-                DataOutputStream request = new DataOutputStream(
-                        httpUrlConnection.getOutputStream());
+                Request request = new Request.Builder()
+                        .url("http://213.226.126.69:5000/" + CurrentReq)
+                        .post(requestBody)
+                        .build();
 
-                request.writeBytes(this.twoHyphens + this.boundary + this.crlf);
-                request.writeBytes("Content-Disposition: form-data; name=\"" +
-                        this.attachmentName + "\";filename=\"" +
-                        this.attachmentFileName + "\"" + this.crlf);
-                request.writeBytes(this.crlf);
-                request.write(inputData);
-                request.writeBytes(this.crlf);
-                request.writeBytes(this.twoHyphens + this.boundary +
-                        this.twoHyphens + this.crlf);
-                request.flush();
-                request.close();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(httpUrlConnection.getOutputStream()));
-                writer.write(params.toString());
-                writer.flush();
-                writer.close();
-
-                InputStream responseStream = new
-                        BufferedInputStream(httpUrlConnection.getInputStream());
-
-                BufferedReader responseStreamReader =
-                        new BufferedReader(new InputStreamReader(responseStream));
-
-                String line = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ((line = responseStreamReader.readLine()) != null) {
-                    stringBuilder.append(line).append("\n");
-                }
-                responseStreamReader.close();
-
-                String response = stringBuilder.toString();
-                responseStream.close();
-                httpUrlConnection.disconnect();
-                return response;
+                Call call = client.newCall(request);
+                Response response = call.execute();
+                System.out.println(response.message());
+                return response.message();
             } catch (Exception e) {
+                System.out.println(e + " ! " + e.getMessage());
+                return "0";
+            }
+        }
+    }
+    private class AsyncUploader2 extends AsyncTask<Void, Integer, String> {
+        String attachmentName = "file";
+        String attachmentFileName = "file.pdf";
+        String crlf = "\r\n";
+        String twoHyphens = "--";
+        String boundary = "*****";
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            return uploadFile();
+        }
+
+        private String uploadFile() {
+            try {
+                OkHttpClient client = new OkHttpClient();
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("id", getValue())
+                        .addFormDataPart("path", active.path)
+                        .addFormDataPart("file", "file.pdf",
+                                RequestBody.create(MediaType.parse("text/plain"),
+                                        inputData))
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url("http://213.226.126.69:5000/" + CurrentReq)
+                        .post(requestBody)
+                        .build();
+
+                Call call = client.newCall(request);
+                Response response = call.execute();
+                System.out.println(response.message());
+                return response.message();
+            } catch (Exception e) {
+                System.out.println(e + " ! " + e.getMessage());
                 return "0";
             }
         }
