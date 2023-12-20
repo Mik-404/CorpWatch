@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
@@ -24,8 +25,19 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.security.spec.ECField;
 import java.util.Hashtable;
 import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
-//        Intent intent2 = new Intent(this, MainScreen.class);
-//        startActivity(intent2);
     }
 
     public void OnClickUser (View v) {
@@ -42,52 +52,30 @@ public class MainActivity extends AppCompatActivity {
         EditText password = (EditText) findViewById(R.id.editTextText2);
         final String usernameText = login.getText().toString().trim();
         final String passwordText = password.getText().toString().trim();
-        Intent intent1 = new Intent(this, NecessaryConditions.class);
-        Intent intent2 = new Intent(this, MainScreen.class);
-        final StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://213.226.126.69/info.php",
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        if (response.equals("400")) {
-                            Toast.makeText(getApplicationContext(), "Неправильный логин или пароль", Toast.LENGTH_LONG).show();
-                        } else {
-                            User[] resultObjects = new Gson().fromJson(response.toString(), User[].class);
-                            setValue(resultObjects[0].id);
-                            if (resultObjects[0].bot.equals("1") && resultObjects[0].image != null) {
-                                startActivity(intent2);
-                            } else {
-                                startActivity(intent1);
-                            }
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (error.getMessage() == null) {
-                    System.out.println(1212);
-                } else {
-                    System.out.println(error.getMessage());
-                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
-                }
-
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new Hashtable<String, String>();
-                params.put("login", usernameText);
-                params.put("password", passwordText);
-                params.put("type", "login");
-                return params;
-            }
-        };
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(30000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        stringRequest.setShouldCache(false);
-        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-        requestQueue.add(stringRequest);
+        AsyncUploader uploadFileToServer = new AsyncUploader();
+        uploadFileToServer.execute(usernameText, passwordText);
         login.setText("");
         password.setText("");
+    }
 
+    public void resultAuthentification (String response){
+        Intent intent1 = new Intent(this, NecessaryConditions.class);
+        Intent intent2 = new Intent(this, MainScreen.class);
+        if (response.equals("400")) {
+            Toast.makeText(getApplicationContext(), "Неправильный логин или пароль", Toast.LENGTH_LONG).show();
+        } else {
+            try {
+                JSONArray resultObjects = new JSONArray(response.toString());
+                setValue(String.valueOf(resultObjects.getInt(2)));
+                if (resultObjects.getInt(4) == 1 && resultObjects.getInt(3) == 1) {
+                    startActivity(intent2);
+                } else {
+                    startActivity(intent1);
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
     public void setValue(String value){
@@ -141,5 +129,48 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(stringRequest);
         login.setText("");
         password.setText("");
+    }
+
+    private class AsyncUploader extends AsyncTask<String, String, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            return uploadFile(params[0], params[1]);
+        }
+        @Override
+        protected void  onPostExecute(String result) {
+            resultAuthentification (result);
+        }
+        private String uploadFile(String login, String password) {
+            try {
+                OkHttpClient client = new OkHttpClient();
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("login", login)
+                        .addFormDataPart("password", password)
+                        .build();
+
+                okhttp3.Request request = new okhttp3.Request.Builder()
+                        .url("http://213.226.126.69:5000/login")
+                        .post(requestBody)
+                        .build();
+
+                Call call = client.newCall(request);
+                okhttp3.Response response = call.execute();
+                int status_code = response.code();
+                String response_text = response.body().string();
+                response.body().close();
+                System.out.println(status_code);
+                return response_text;
+            } catch (Exception e) {
+                System.out.println(e + " ! " + e.getMessage());
+                return "0";
+            }
+        }
     }
 }

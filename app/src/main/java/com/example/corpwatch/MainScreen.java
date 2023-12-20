@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -78,12 +79,11 @@ public class MainScreen extends AppCompatActivity {
     Button bt1, bt2, bt3;
     float ActiveTxt = 18f;
     float BaseTxt = 17;
-    byte[] inputData;
+    HashMap<String, byte[]> inputData;
     Files active;
     TextView ex1tsc;
     ImageButton ex1bsc;
     LinearLayout ex1lsc;
-    String CurrentReq;
     Files [] resultObjects;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,8 +96,10 @@ public class MainScreen extends AppCompatActivity {
         ex1tsc = findViewById(R.id.textView5);
         ex1bsc = findViewById(R.id.imageButton);
         ex1lsc = findViewById(R.id.example1_scroll);
+        inputData=new HashMap<>();
         lineUlt(1);
         getHistory();
+        System.out.println(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
     }
     public void getHistory () {
         final StringRequest stringRequest = new StringRequest(com.android.volley.Request.Method.POST, "http://213.226.126.69/hist.php",
@@ -118,70 +120,59 @@ public class MainScreen extends AppCompatActivity {
                         }
                         if (response.equals("400")) {
                             TextView elem = new TextView(getApplicationContext());
-                            LinearLayout.LayoutParams params= new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
-                            //params.setMargins(1, 5, 1, 0);
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                             elem.setLayoutParams(params);
                             elem.setTextColor(getResources().getColor(R.color.black));
                             elem.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
-                            elem.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
+                            elem.setTextSize(TypedValue.COMPLEX_UNIT_SP, ActiveTxt);
                             elem.setGravity(Gravity.CENTER);
                             elem.setText("Ничего не найдено");
                             scv.addView(elem);
-                            return;
-                        }
-                        resultObjects = new Gson().fromJson(response.toString(), Files[].class);
-                        int i = 0;
-                        for (Files f : resultObjects) {
-                            System.out.println(f.name_file);
-                            TextView elem = new TextView(getApplicationContext());
-                            elem.setLayoutParams(ex1tsc.getLayoutParams());
+                        } else {
+                            resultObjects = new Gson().fromJson(response.toString(), Files[].class);
+                            int i = 0;
+                            for (Files f : resultObjects) {
+                                System.out.println(f.name_file);
+                                TextView elem = new TextView(getApplicationContext());
+                                elem.setLayoutParams(ex1tsc.getLayoutParams());
 
-                            ImageButton elem2 = new ImageButton((getApplicationContext()));
-                            elem2.setLayoutParams(ex1bsc.getLayoutParams());
+                                ImageButton elem2 = new ImageButton((getApplicationContext()));
+                                elem2.setLayoutParams(ex1bsc.getLayoutParams());
 
-                            LinearLayout elem3 = new LinearLayout((getApplicationContext()));
-                            elem3.setLayoutParams(ex1lsc.getLayoutParams());
+                                LinearLayout elem3 = new LinearLayout((getApplicationContext()));
+                                elem3.setLayoutParams(ex1lsc.getLayoutParams());
 
-                            elem.setTextColor(getResources().getColor(R.color.black));
-                            elem.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
-                            elem.setTextSize(TypedValue.COMPLEX_UNIT_SP,20);
-                            elem.setGravity(Gravity.CENTER);
-                            elem.setText(f.name_file);
+                                elem.setTextColor(getResources().getColor(R.color.black));
+                                elem.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
+                                elem.setTextSize(TypedValue.COMPLEX_UNIT_SP,20);
+                                elem.setGravity(Gravity.CENTER);
+                                elem.setText(f.name_file);
 
-                            elem2.setPadding(20,0,0,0);
-                            elem2.setBackgroundColor(Color.parseColor("#00FFFFFF"));
-                            elem2.setScaleType(ImageView.ScaleType.FIT_START);
-                            elem2.setImageResource (R.drawable.skrpk);
-                            elem2.setTag(Integer.toString(i));
-                            elem2.setOnClickListener(new View.OnClickListener(){
-                                @Override
-                                public void onClick(View view) {
-                                    System.out.println(view.getTag());
-                                    active = resultObjects[Integer.parseInt(view.getTag().toString())];
-                                    for (int i = 0; i < 5; i++) {
-                                        try {
-                                            System.out.println(active.path);
-                                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                                            intent.setType("application/pdf");
-                                            startActivityForResult(intent, 2);
-                                            break;
-                                        } catch (Exception e) {
-
-                                        }
+                                elem2.setPadding(20,0,0,0);
+                                elem2.setBackgroundColor(Color.parseColor("#00FFFFFF"));
+                                elem2.setScaleType(ImageView.ScaleType.FIT_START);
+                                elem2.setImageResource (R.drawable.skrpk);
+                                elem2.setTag(Integer.toString(i));
+                                elem2.setOnClickListener(new View.OnClickListener(){
+                                    @Override
+                                    public void onClick(View view) {
+                                        active = resultObjects[Integer.parseInt(view.getTag().toString())];
+                                        showFileChooser(3);
                                     }
-                                }
-                            });
-                            i++;
+                                });
+                                i++;
 
 
-                            elem3.setVerticalGravity(Gravity.CENTER_VERTICAL);
-                            elem3.setHorizontalGravity(Gravity.RIGHT);
-                            elem3.setOrientation(LinearLayout.HORIZONTAL);
+                                elem3.setVerticalGravity(Gravity.CENTER_VERTICAL);
+                                elem3.setHorizontalGravity(Gravity.RIGHT);
+                                elem3.setOrientation(LinearLayout.HORIZONTAL);
 
-                            elem3.addView(elem);
-                            elem3.addView(elem2);
-                            scv.addView(elem3);
+                                elem3.addView(elem);
+                                elem3.addView(elem2);
+                                scv.addView(elem3);
+                            }
                         }
+                        findViewById(R.id.scv1).setVisibility(View.VISIBLE);
                     }
                 }, new com.android.volley.Response.ErrorListener() {
             @Override
@@ -203,14 +194,13 @@ public class MainScreen extends AppCompatActivity {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         requestQueue.add(stringRequest);
     }
-    //method to show file chooser
-    private void showFileChooser() {
-        System.out.println(12);
+
+    private void showFileChooser(int requestCode) {
         for (int i = 0; i < 5; i++) {
             try {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("application/pdf");
-                startActivityForResult(intent, 1);
+                startActivityForResult(intent, requestCode);
                 break;
             } catch (Exception e) {
 
@@ -218,170 +208,129 @@ public class MainScreen extends AppCompatActivity {
         }
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+            for (int i = 0; i < 5; i++) {
+                try {
+                    // Get the Uri of the selected file
+                    Uri uri = data.getData();
+                    String uriString = uri.toString();
+                    File myFile = new File(uriString);
+                    String path = myFile.getAbsolutePath();
+                    String displayName = null;
 
-            if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
-                for (int i = 0; i < 5; i++) {
-                    try {
-                        // Get the Uri of the selected file
-                        Uri uri = data.getData();
-                        String uriString = uri.toString();
-                        File myFile = new File(uriString);
-                        String path = myFile.getAbsolutePath();
-                        String displayName = null;
-
-                        if (uriString.startsWith("content://")) {
-                            Cursor cursor = null;
-                            try {
-                                cursor = this.getContentResolver().query(uri, null, null, null, null);
-                                if (cursor != null && cursor.moveToFirst()) {
-                                    displayName = cursor.getString(Math.max(0, cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
-
-                                    uploadPDF(displayName, uri);
+                    if (uriString.startsWith("content://")) {
+                        Cursor cursor = null;
+                        try {
+                            cursor = this.getContentResolver().query(uri, null, null, null, null);
+                            if (cursor != null && cursor.moveToFirst()) {
+                                InputStream iStream = null;
+                                try {
+                                    iStream = getContentResolver().openInputStream(uri);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                            } finally {
-                                cursor.close();
-                            }
-                        } else if (uriString.startsWith("file://")) {
-                            displayName = myFile.getName();
-                            uploadPDF(displayName, uri);
-                        }
-
-                        break;
-                    } catch (Exception e) {
-
-                    }
-                }
-            } else if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
-                for (int i = 0; i < 5; i++) {
-                    try {
-                        // Get the Uri of the selected file
-                        Uri uri = data.getData();
-                        String uriString = uri.toString();
-                        File myFile = new File(uriString);
-                        String path = myFile.getAbsolutePath();
-                        String displayName = null;
-
-                        if (uriString.startsWith("content://")) {
-                            Cursor cursor = null;
-                            try {
-                                cursor = this.getContentResolver().query(uri, null, null, null, null);
-                                if (cursor != null && cursor.moveToFirst()) {
-                                    displayName = cursor.getString(Math.max(0, cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
-
-                                    uploadPDF2(displayName, uri);
+                                if (requestCode == 1) {
+                                    inputData.put("req",getBytes(iStream));
+                                } else if (requestCode == 2) {
+                                    inputData.put("test",getBytes(iStream));
+                                } else if (requestCode == 3) {
+                                    inputData.put("change",getBytes(iStream));
+                                    AsyncUploader uploadFileToServer = new AsyncUploader();
+                                    uploadFileToServer.execute("change");
+                                    return;
                                 }
-                            } finally {
-                                cursor.close();
+                                Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
                             }
-                        } else if (uriString.startsWith("file://")) {
-                            displayName = myFile.getName();
-                            uploadPDF2(displayName, uri);
+                        } finally {
+                            cursor.close();
                         }
-
-                        break;
-                    } catch (Exception e) {
-
+                    } else if (uriString.startsWith("file://")) {
+                        InputStream iStream = null;
+                        try {
+                            iStream = getContentResolver().openInputStream(uri);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (requestCode == 1) {
+                            inputData.put("req",getBytes(iStream));
+                        } else if (requestCode == 2) {
+                            inputData.put("test",getBytes(iStream));
+                        } else if (requestCode == 3) {
+                            inputData.put("change",getBytes(iStream));
+                            AsyncUploader uploadFileToServer = new AsyncUploader();
+                            uploadFileToServer.execute("change");
+                            return;
+                        }
+                        Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
                     }
+                    break;
+                } catch (Exception e) {
                 }
             }
+        }
     }
 
-    private void uploadPDF(final String pdfname, Uri pdffile){
-        InputStream iStream = null;
-        try {
-            iStream = getContentResolver().openInputStream(pdffile);
-            inputData = getBytes(iStream);
-            AsyncUploader uploadFileToServer = new AsyncUploader();
-            uploadFileToServer.execute();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
-    }
-    public void uploadPDF2 (final String pdfname, Uri pdffile) {
-        InputStream iStream = null;
-        try {
-            CurrentReq = "change";
-            iStream = getContentResolver().openInputStream(pdffile);
-            inputData = getBytes(iStream);
-            AsyncUploader2 uploadFileToServer = new AsyncUploader2();
-            uploadFileToServer.execute();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
-    }
-    public byte[] getBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-        int bufferSize = 1024;
-        byte[] buffer = new byte[bufferSize];
 
-        int len = 0;
-        while ((len = inputStream.read(buffer)) != -1) {
-            byteBuffer.write(buffer, 0, len);
-        }
-        return byteBuffer.toByteArray();
-    }
-    public void onClickHistory (View v) {
-        lineUlt (1);
-        findViewById(R.id.button10).setVisibility(View.GONE);
-        findViewById(R.id.button11).setVisibility(View.GONE);
-        findViewById(R.id.scv1).setVisibility(View.VISIBLE);
-        bt1.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
-        bt2.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
-        bt3.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
-        bt1.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
-        bt2.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
-        bt3.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
-        getHistory();
-    }
-    public void onClickReq (View v) {
-        lineUlt (2);
-        findViewById(R.id.button11).setVisibility(View.VISIBLE);
+    public void onClickSlider (View v) {
+        int n = Integer.parseInt(v.getTag().toString());
+        lineUlt (n);
+
         findViewById(R.id.scv1).setVisibility(View.GONE);
-        findViewById(R.id.button10).setVisibility(View.GONE);
-        bt1.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
-        bt2.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
-        bt3.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
-        bt2.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
-        bt1.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
-        bt3.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
-    }
-    public void OnClickReqButton (View v) {
-        CurrentReq = "req";
-        showFileChooser();
-    }
-    public void onClickTest (View v) {
-        lineUlt (3);
-        findViewById(R.id.scv1).setVisibility(View.GONE);
-        findViewById(R.id.button11).setVisibility(View.GONE);
-        findViewById(R.id.button10).setVisibility(View.VISIBLE);
+        findViewById(R.id.AddReq).setVisibility(View.GONE);
+        findViewById(R.id.AddTest).setVisibility(View.GONE);
+
+
         bt1.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
         bt2.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
-        bt3.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
-        bt3.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
-        bt2.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
+        bt3.setTextAppearance(android.R.style.TextAppearance_Material_Body1);
+
+
         bt1.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
+        bt2.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
+        bt3.setTextSize(TypedValue.COMPLEX_UNIT_SP,BaseTxt);
+        if (n == 1) {
+            bt1.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
+            bt1.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
+            getHistory();
+
+        } else if (n == 2) {
+            bt2.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
+            bt2.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
+            findViewById(R.id.AddReq).setVisibility(View.VISIBLE);
+
+        } else if (n== 3) {
+            bt3.setTextAppearance(android.R.style.TextAppearance_Material_Body2);
+            bt3.setTextSize(TypedValue.COMPLEX_UNIT_SP,ActiveTxt);
+            findViewById(R.id.AddTest).setVisibility(View.VISIBLE);
+
+        }
+
     }
-    public void onClickTestButton (View v) {
-        CurrentReq = "test";
-        showFileChooser();
+
+    public void OnAddButton (View v) {
+        int n = Integer.parseInt(v.getTag().toString());
+        showFileChooser(n);
     }
+
+    public void OnClickButton1 (View v) {
+        int n = Integer.parseInt(v.getTag().toString());
+        AsyncUploader uploadFileToServer = new AsyncUploader();
+        if (n == 1) {
+            uploadFileToServer.execute("req");
+        } else {
+            uploadFileToServer.execute("test");
+        }
+    }
+
     public void lineUlt  (int n) {
         if (f != null) {
             ((ViewManager)f.getParent()).removeView(f);
         }
         View v = new View(this);
         RelativeLayout.LayoutParams params= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,height_f);
-        //params.setMargins(1, 5, 1, 0);
         v.setLayoutParams(params);
         v.setBackgroundResource(R.color.black);
         v.setId(R.id.reservedNamedId);
@@ -398,96 +347,77 @@ public class MainScreen extends AppCompatActivity {
         f = v;
     }
 
+    public byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
+    }
+
     public String getValue(){
         SharedPreferences preferences = this.getSharedPreferences("settings", this.MODE_PRIVATE);
         return preferences.getString("id", "");
     }
 
-    private class AsyncUploader extends AsyncTask<Void, Integer, String> {
-        String attachmentName = "file";
-        String attachmentFileName = "file.pdf";
-        String crlf = "\r\n";
-        String twoHyphens = "--";
-        String boundary = "*****";
-
+    private class AsyncUploader extends AsyncTask<String, String, String> {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
         }
 
         @Override
-        protected String doInBackground(Void... params) {
-            return uploadFile();
+        protected String doInBackground(String... params) {
+
+            return uploadFile(params[0]);
+        }
+        @Override
+        protected void  onPostExecute(String result) {
+
+            resultProcess (result);
         }
 
-        private String uploadFile() {
+        private String uploadFile(String requestTo) {
+
+            if (inputData.get(requestTo) == null) return "100";
             try {
                 OkHttpClient client = new OkHttpClient();
-                RequestBody requestBody = new MultipartBody.Builder()
+                MultipartBody.Builder buildBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
-                        .addFormDataPart("id", getValue())
-                        .addFormDataPart("file", "file.pdf",
-                                RequestBody.create(MediaType.parse("text/plain"),
-                                        inputData))
-                        .build();
+                        .addFormDataPart("id", getValue());
+                if (requestTo == "change") {
+                    buildBody.addFormDataPart("path", active.path);
+                }
+                RequestBody requestBody = buildBody.addFormDataPart("file", "file.pdf",
+                                RequestBody.create(MediaType.parse("text/plain"), inputData.get(requestTo))).build();
 
                 Request request = new Request.Builder()
-                        .url("http://213.226.126.69:5000/" + CurrentReq)
+                        .url("http://213.226.126.69:5000/" + requestTo)
                         .post(requestBody)
                         .build();
 
                 Call call = client.newCall(request);
                 Response response = call.execute();
-                System.out.println(response.message());
-                return response.message();
+                response.body().close();
+                return "200";
             } catch (Exception e) {
-                System.out.println(e + " ! " + e.getMessage());
                 return "0";
             }
         }
     }
-    private class AsyncUploader2 extends AsyncTask<Void, Integer, String> {
-        String attachmentName = "file";
-        String attachmentFileName = "file.pdf";
-        String crlf = "\r\n";
-        String twoHyphens = "--";
-        String boundary = "*****";
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            return uploadFile();
-        }
-
-        private String uploadFile() {
-            try {
-                OkHttpClient client = new OkHttpClient();
-                RequestBody requestBody = new MultipartBody.Builder()
-                        .setType(MultipartBody.FORM)
-                        .addFormDataPart("id", getValue())
-                        .addFormDataPart("path", active.path)
-                        .addFormDataPart("file", "file.pdf",
-                                RequestBody.create(MediaType.parse("text/plain"),
-                                        inputData))
-                        .build();
-
-                Request request = new Request.Builder()
-                        .url("http://213.226.126.69:5000/" + CurrentReq)
-                        .post(requestBody)
-                        .build();
-
-                Call call = client.newCall(request);
-                Response response = call.execute();
-                System.out.println(response.message());
-                return response.message();
-            } catch (Exception e) {
-                System.out.println(e + " ! " + e.getMessage());
-                return "0";
-            }
+    public void resultProcess (String result) {
+        if (result.equals("200")) {
+            Toast.makeText(this,"Успешно", Toast.LENGTH_LONG).show();
+        } else if (result.equals("100")) {
+            Toast.makeText(this,"Необходимо прикрепить файл", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this,"No internet coonection", Toast.LENGTH_LONG).show();
         }
     }
+
 }
